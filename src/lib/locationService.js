@@ -1,5 +1,5 @@
-import geolocationsGraphData from '../../data/geolocations_graph.json';
-import campusGraphData from '../../data/campus_graph.json';
+import geolocationsGraphData from '../data/geolocations_graph.json';
+import campusGraphData from '../data/campus_graph.json';
 
 /**
  * Get all selectable campus locations (Buildings, Tags, and Classrooms/Labs)

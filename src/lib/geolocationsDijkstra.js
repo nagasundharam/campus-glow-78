@@ -1,4 +1,4 @@
-import geolocationsData from '../../data/geolocations_graph.json';
+import geolocationsData from '../data/geolocations_graph.json';
 
 /**
  * Calculate Euclidean distance between two pixel coordinates (left1, top1) and (left2, top2)
@@ -44,7 +44,7 @@ export function findNearestJunction(left, top, type = 'pedestrian') {
   return nearestId;
 }
 
-import campusGraphData from '../../data/campus_graph.json';
+import campusGraphData from '../data/campus_graph.json';
 
 /**
  * Resolve start or destination location ID/tag/object/coords to road junction ID
