@@ -73,7 +73,7 @@ function MapWorkspace({ navigationMode }: { navigationMode: boolean }) {
   const allLocations = useMemo(() => getAllSelectableLocations(), []);
   const [query, setQuery] = useState("");
   const [from, setFrom] = useState("main-gate");
-  const [to, setTo] = useState("learning-center");
+  const [to, setTo] = useState("learning_center");
   const [mode, setMode] = useState<"pedestrian" | "vehicle">("pedestrian");
   const [route, setRoute] = useState<any>(() => findGeolocationsRoute(from, to, mode));
   const results = query ? searchLocations(query).slice(0, 6) : [];
@@ -106,7 +106,7 @@ function MapWorkspace({ navigationMode }: { navigationMode: boolean }) {
   </div>;
 }
 
-function LocationSelect({label,value,onChange,locations}:{label:string,value:string,onChange:(v:string)=>void,locations:any[]}) { return <label className="block"><span className="mb-1 block text-xs font-bold text-muted-foreground">{label}</span><div className="flex items-center gap-2 rounded-xl border px-3"><MapPin className="size-4 text-primary"/><select value={value} onChange={e=>onChange(e.target.value)} className="h-12 min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"><option value="main-gate">Main Gate</option><option value="learning-center">BIT Learning Center</option>{locations.slice(0,100).map((l:any)=><option key={`${l.id}-${l.roomId||""}`} value={l.id}>{l.name}</option>)}</select></div></label> }
+function LocationSelect({label,value,onChange,locations}:{label:string,value:string,onChange:(v:string)=>void,locations:any[]}) { return <label className="block"><span className="mb-1 block text-xs font-bold text-muted-foreground">{label}</span><div className="flex items-center gap-2 rounded-xl border px-3"><MapPin className="size-4 text-primary"/><select value={value} onChange={e=>onChange(e.target.value)} className="h-12 min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"><option value="main-gate">Main Gate</option><option value="learning_center">BIT Learning Center</option>{locations.slice(0,100).map((l:any)=><option key={`${l.id}-${l.roomId||""}`} value={l.id}>{l.name}</option>)}</select></div></label> }
 
 function RouteOverlay({ route }: { route: any }) { const points=(route.crsSimpleCoordinates||[]).map((p:number[])=>`${((p[1] ?? 0)/2896)*100},${(1-(p[0] ?? 0)/3876)*100}`).join(" "); return <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="pointer-events-none absolute inset-0 z-[1] h-full w-full" aria-hidden="true"><polyline points={points} fill="none" stroke="var(--primary)" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke"/><circle cx="63" cy="14" r="1.4" fill="var(--primary)"/></svg> }
 
