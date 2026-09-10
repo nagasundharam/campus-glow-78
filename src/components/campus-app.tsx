@@ -1,8 +1,8 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
-  ArrowLeft, ArrowRight, Bell, Bike, BookOpen, Bot, Building2, CalendarDays,
-  ChevronDown, CircleHelp, Clock3, Compass, Footprints, Heart, LayoutDashboard,
+  ArrowRight, Bell, Bike, BookOpen, Bot, Building2, CalendarDays,
+  ChevronDown, CircleHelp, Compass, Footprints, Heart, LayoutDashboard,
   LocateFixed, Map, MapPin, Menu, Navigation, PackageSearch, QrCode, Search,
   Settings, ShieldCheck, SlidersHorizontal, Sparkles, UserRound, X
 } from "lucide-react";
@@ -10,6 +10,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getAllSelectableLocations, searchLocations } from "@/lib/locationService.js";
 import { findGeolocationsRoute } from "@/lib/geolocationsDijkstra.js";
+import {
+  Conversation, ConversationContent, ConversationScrollButton,
+} from "@/components/ai-elements/conversation";
+import { Message, MessageContent } from "@/components/ai-elements/message";
+import {
+  PromptInput, PromptInputBody, PromptInputFooter, PromptInputSubmit,
+  PromptInputTextarea,
+} from "@/components/ai-elements/prompt-input";
 
 const MAP_URL = "/__l5e/assets-v1/ffe4240f-e168-4688-b83c-6038ce83fed5/campus-map.webp";
 
@@ -100,7 +108,7 @@ function MapWorkspace({ navigationMode }: { navigationMode: boolean }) {
 
 function LocationSelect({label,value,onChange,locations}:{label:string,value:string,onChange:(v:string)=>void,locations:any[]}) { return <label className="block"><span className="mb-1 block text-xs font-bold text-muted-foreground">{label}</span><div className="flex items-center gap-2 rounded-xl border px-3"><MapPin className="size-4 text-primary"/><select value={value} onChange={e=>onChange(e.target.value)} className="h-12 min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"><option value="main-gate">Main Gate</option><option value="learning-center">BIT Learning Center</option>{locations.slice(0,100).map((l:any)=><option key={`${l.id}-${l.roomId||""}`} value={l.id}>{l.name}</option>)}</select></div></label> }
 
-function RouteOverlay({ route }: { route: any }) { const points=(route.crsSimpleCoordinates||[]).map((p:number[])=>`${(p[1]/2896)*100},${(1-p[0]/3876)*100}`).join(" "); return <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="pointer-events-none absolute inset-0 z-[1] h-full w-full" aria-hidden="true"><polyline points={points} fill="none" stroke="var(--primary)" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke"/><circle cx="63" cy="14" r="1.4" fill="var(--primary)"/></svg> }
+function RouteOverlay({ route }: { route: any }) { const points=(route.crsSimpleCoordinates||[]).map((p:number[])=>`${((p[1] ?? 0)/2896)*100},${(1-(p[0] ?? 0)/3876)*100}`).join(" "); return <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="pointer-events-none absolute inset-0 z-[1] h-full w-full" aria-hidden="true"><polyline points={points} fill="none" stroke="var(--primary)" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke"/><circle cx="63" cy="14" r="1.4" fill="var(--primary)"/></svg> }
 
 function ContentPage({ page }: { page: PageKey }) {
   const content: Record<string,{title:string,sub:string,items:{title:string,meta:string,status?:string}[]}> = {
@@ -119,11 +127,12 @@ function ContentPage({ page }: { page: PageKey }) {
     admin:{title:"Campus administration",sub:"Operational controls and service overview.",items:[{title:"User management",meta:"2,847 active users"},{title:"Asset requests",meta:"7 pending approvals",status:"Review"},{title:"Service health",meta:"All systems operational",status:"Healthy"}]},
   };
   if(page==="chatbot") return <ChatPage/>;
-  const c=content[page] || content.dashboard;
+  const fallback = { title:"Campus dashboard", sub:"Your campus day at a glance.", items:[] };
+  const c=content[page] ?? content["dashboard"] ?? fallback;
   return <div className="mx-auto min-h-[calc(100dvh-4rem)] max-w-6xl px-4 py-7 pb-28 sm:px-7 lg:pb-10"><div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase text-muted-foreground">CampusNav</p><h1 className="mt-1 font-display text-3xl font-bold">{c.title}</h1><p className="mt-2 text-sm text-muted-foreground">{c.sub}</p></div><Button><QrCode />Scan campus QR</Button></div><div className="mt-7 grid gap-3 md:grid-cols-2 xl:grid-cols-3">{c.items.map((item,i)=><article key={item.title} className="rounded-2xl border bg-card p-5 shadow-sm"><div className="flex items-start justify-between gap-3"><span className="grid size-11 place-items-center rounded-xl bg-secondary"><Building2 className="size-5"/></span>{item.status&&<span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-bold">{item.status}</span>}</div><h2 className="mt-5 font-display text-lg font-bold">{item.title}</h2><p className="mt-1 text-sm text-muted-foreground">{item.meta}</p><Button className="mt-5 w-full" variant="outline">View details<ArrowRight /></Button></article>)}</div></div>;
 }
 
-function ChatPage() { const [messages,setMessages]=useState([{role:"assistant",text:"Hi Alex — ask me about campus buildings, rooms, services, or the fastest way to get somewhere."}]); const [text,setText]=useState(""); const send=()=>{if(!text.trim())return; const q=text; setText(""); setMessages(m=>[...m,{role:"user",text:q},{role:"assistant",text:`I can help with “${q}”. For exact directions, open Navigate and choose your start and destination.`}]);}; return <div className="mx-auto flex h-[calc(100dvh-4rem)] max-w-4xl flex-col px-4 pb-24 pt-7 sm:px-7 lg:pb-7"><div><p className="text-xs font-bold uppercase text-muted-foreground">Campus assistant</p><h1 className="mt-1 font-display text-3xl font-bold">How can I help?</h1></div><div className="mt-6 flex-1 space-y-3 overflow-y-auto rounded-2xl border bg-card p-4">{messages.map((m,i)=><div key={i} className={`max-w-[82%] rounded-2xl px-4 py-3 text-sm ${m.role==="user"?"ml-auto bg-primary text-primary-foreground":"bg-muted"}`}>{m.text}</div>)}</div><form className="mt-3 flex gap-2" onSubmit={e=>{e.preventDefault();send();}}><Input value={text} onChange={e=>setText(e.target.value)} placeholder="Ask about campus…" className="h-12 rounded-xl bg-card"/><Button className="size-12 shrink-0" type="submit" aria-label="Send message"><ArrowRight/></Button></form></div> }
+function ChatPage() { const [messages,setMessages]=useState<{role:"assistant"|"user",text:string}[]>([{role:"assistant",text:"Hi Alex — ask me about campus buildings, rooms, services, or the fastest way to get somewhere."}]); const send=(text:string)=>{if(!text.trim())return; setMessages(m=>[...m,{role:"user",text},{role:"assistant",text:`I can help with “${text}”. For exact directions, open Navigate and choose your start and destination.`}]);}; return <div className="mx-auto flex h-[calc(100dvh-4rem)] max-w-4xl flex-col px-4 pb-24 pt-7 sm:px-7 lg:pb-7"><div><p className="text-xs font-bold uppercase text-muted-foreground">Campus assistant</p><h1 className="mt-1 font-display text-3xl font-bold">How can I help?</h1></div><Conversation className="mt-6 rounded-2xl border bg-card"><ConversationContent className="gap-4 p-4">{messages.map((m,i)=><Message key={`${m.role}-${i}`} from={m.role}><MessageContent className={m.role==="assistant"?"rounded-2xl bg-muted px-4 py-3":""}>{m.text}</MessageContent></Message>)}</ConversationContent><ConversationScrollButton/></Conversation><PromptInput className="mt-3" onSubmit={({text})=>send(text)}><PromptInputBody><PromptInputTextarea placeholder="Ask about campus…"/></PromptInputBody><PromptInputFooter className="justify-end"><PromptInputSubmit/></PromptInputFooter></PromptInput></div> }
 
 function MobileNav({page}:{page:PageKey}) { const items=[["/","Explore",Compass],["/buildings","Buildings",Building2],["/saved","Saved",Heart],["/profile","You",UserRound]] as const; return <nav className="fixed inset-x-0 bottom-0 z-30 grid h-[74px] grid-cols-4 border-t bg-card px-2 pb-[env(safe-area-inset-bottom)] lg:hidden" aria-label="Quick navigation">{items.map(([to,label,Icon])=>{const active=(page==="explore"&&to==="/")||page===to.slice(1);return <Link key={to} to={to} className={`flex flex-col items-center justify-center gap-1 text-[11px] font-bold ${active?"text-foreground":"text-muted-foreground"}`}><span className={active?"rounded-xl bg-primary p-2":"p-2"}><Icon className="size-5"/></span>{label}</Link>})}</nav> }
 
